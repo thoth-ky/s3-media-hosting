@@ -24,6 +24,22 @@ def upload_file_object(file_obj, bucket, key):
     return True
 
 
+def create_presigned_url(bucket_name, key, expiration=3600):
+    # Generate a presigned URL for the S3 object
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket_name, 'Key': key},
+            ExpiresIn=expiration
+        )
+    except ClientError as e:
+        logging.error(e)
+        return None
+
+    # The response contains the presigned URL
+    return response
+
 if __name__ == "__main__":
     logger = logging.getLogger()
     logger.info('TEST RUN STARTED')
