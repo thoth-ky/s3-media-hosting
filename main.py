@@ -1,13 +1,18 @@
 from fastapi import FastAPI, File, UploadFile, Form, status, Response
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from typing import Optional
 from pydantic import BaseModel
 from decouple import config
 # local imports
 from utils.upload_file import upload_file_object, create_presigned_url
+from config.settings import BUCKET_NAME, ROOT_FOLDER
 
 
 app = FastAPI()
-BUCKET_NAME = config('S3_BUCKET_NAME')
+
+app.add_middleware(
+    TrustedHostMiddleware, allowed_hosts=["pbp.local", "*.poweredbypeople.io"]
+)
 
 
 class FileObject(BaseModel):
@@ -23,7 +28,7 @@ def read_root():
 @app.post("/upload", status_code=status.HTTP_201_CREATED)
 async def upload_file(folder_path: str = Form(...), file: UploadFile = File(...), response: Response = 201):
     filename = file.filename
-    key = f"{folder_path}/{filename}"
+    key = f"{apps}/{folder_path}/{filename}"
     response = upload_file_object(file_obj=file.file, bucket=BUCKET_NAME, key=key)
     if response:
         response = {
@@ -48,3 +53,8 @@ async def get_presigned_link(file: FileObject):
     return {
         "link": link
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
