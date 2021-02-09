@@ -4,14 +4,14 @@ from typing import Optional
 from pydantic import BaseModel
 from decouple import config
 # local imports
-from utils.upload_file import upload_file_object, create_presigned_url
-from config.settings import BUCKET_NAME, ROOT_FOLDER
+from utils.s3 import upload_file_object, create_presigned_url
+from config.settings import BUCKET_NAME, ROOT_FOLDER, ALLOWED_HOSTS
 
 
 app = FastAPI()
 
 app.add_middleware(
-    TrustedHostMiddleware, allowed_hosts=["pbp.local", "*.poweredbypeople.io"]
+    TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS
 )
 
 
@@ -28,7 +28,7 @@ def read_root():
 @app.post("/upload", status_code=status.HTTP_201_CREATED)
 async def upload_file(folder_path: str = Form(...), file: UploadFile = File(...), response: Response = 201):
     filename = file.filename
-    key = f"{apps}/{folder_path}/{filename}"
+    key = f"{ROOT_FOLDER}/{folder_path}/{filename}"
     response = upload_file_object(file_obj=file.file, bucket=BUCKET_NAME, key=key)
     if response:
         response = {

@@ -43,9 +43,9 @@ def create_presigned_url(bucket_name, key, expiration=3600):
 if __name__ == "__main__":
     logger = logging.getLogger()
     logger.info('TEST RUN STARTED')
-    test_file = 'test.png'
+    test_file = '/home/thoth/repos/open/s3-media-hosting/utils/test.png'
     BUCKET_NAME = config('S3_BUCKET_NAME')
-    KEY_NAME = 'apps/bs/test.png'
+    KEY_NAME = 'apps/test/test.png'
 
 
     with open(test_file, 'rb') as image:
@@ -57,7 +57,8 @@ if __name__ == "__main__":
 
         if response:
             print("Successful")
-        print("Failed", response)
+        else:
+            print("Failed", response)
 
     logger.info('TEST RUN COMPLETED')
     
