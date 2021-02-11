@@ -1,11 +1,15 @@
+from datetime import datetime, timedelta
 from fastapi import FastAPI, File, UploadFile, Form, status, Response
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from typing import Optional
 from pydantic import BaseModel
 from decouple import config
+
+
 # local imports
 from utils.s3 import upload_file_object, create_presigned_url
-from config.settings import BUCKET_NAME, ROOT_FOLDER, ALLOWED_HOSTS
+from utils.cloudfront import get_cdn_presigned_url
+from config.settings import BUCKET_NAME, ROOT_FOLDER, ALLOWED_HOSTS, CF_DOMAIN_NAME
 
 
 app = FastAPI()
@@ -50,6 +54,22 @@ async def get_presigned_link(file: FileObject):
     key = file.key
     expiration = file.expiration
     link = create_presigned_url(bucket_name=BUCKET_NAME, key=key, expiration=expiration)
+    return {
+        "link": link
+    }
+
+
+@app.post('/cloudfront_signed_url')
+async def get_cloudfront_signed_url(file: FileObject):
+    key = file.key
+    expiration = file.expiration
+    expiration = datetime.now() + timedelta(seconds=expiration)
+    url = f"{CF_DOMAIN_NAME}/{key}"
+
+    link = get_cdn_presigned_url(
+        url=url,
+        expiration=expiration,
+    )
     return {
         "link": link
     }
